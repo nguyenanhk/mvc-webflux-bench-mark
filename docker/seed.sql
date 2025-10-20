@@ -1,0 +1,1 @@
+INSERT INTO users (email, full_name) SELECT 'user'||g||'@example.com', 'User '||g FROM generate_series(1, 1000000) g;

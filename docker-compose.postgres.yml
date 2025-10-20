@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: bench
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: [ "5432:5432" ]
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/00-init.sql
+      - ./docker/seed.sql:/docker-entrypoint-initdb.d/10-seed.sql
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=300"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "work_mem=32MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "autovacuum=off"
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 4g
+    networks:
+      - bench-net
+networks:
+  bench-net:
+    external: true

@@ -1,0 +1,14 @@
+plugins {
+    id 'org.springframework.boot' version '3.3.4'
+}
+
+dependencies {
+    implementation project(':shared-domain')
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+
+    implementation 'org.postgresql:r2dbc-postgresql:1.0.7.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+}

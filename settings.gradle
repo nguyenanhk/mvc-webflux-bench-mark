@@ -1,0 +1,2 @@
+rootProject.name = 'spring-reactive-benchmark'
+include 'shared-domain', 'mvc-app', 'webflux-app'

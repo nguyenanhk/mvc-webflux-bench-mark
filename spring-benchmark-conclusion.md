@@ -41,11 +41,11 @@ The test focuses on throughput, latency, and system behavior when directly expos
 ```
 
 **Request Flow:**
-1. Load tester sends concurrent GET requests to `/api/users/{id}`.
+1. Load tester sends concurrent GET requests to `/api/users/{id}`.  
 2. The application receives and processes the request:
-    - **Spring MVC:** creates a new thread per request (Tomcat worker model).
-    - **WebFlux:** processes asynchronously using event loops (Netty model).
-3. Each app queries **PostgreSQL**, maps data from Entity → DTO, and returns JSON.
+   - **Spring MVC:** creates a new thread per request (Tomcat worker model).  
+   - **WebFlux:** processes asynchronously using event loops (Netty model).  
+3. Each app queries **PostgreSQL**, maps data from Entity → DTO, and returns JSON.  
 4. Prometheus collects system metrics during the run.
 
 ---
@@ -122,23 +122,23 @@ These metrics are collected via **Spring Actuator → Prometheus → Grafana** a
 ### 🔹 JVM Threads
 - Observes how many threads each framework spawns under different concurrency levels.
 - High thread count in Spring MVC may indicate thread saturation; WebFlux typically remains constant.
-  ![jvm_thread.png](results/final/jvm_thread.png)
+![jvm_thread.png](results/final/jvm_thread.png)
 
 ### 🔹 CPU Usage (%)
 - Measures average CPU utilization during each load level.
 - High values (80–100%) indicate CPU-bound workloads (serialization, mapping, etc.).
-  ![cpu_usage.png](results/final/cpu_usage.png)
+![cpu_usage.png](results/final/cpu_usage.png)
 
 ### 🔹 Memory Usage (MB)
 - Shows heap consumption and GC behavior during tests.
 - Useful for detecting leaks or excessive object creation.
-  ![memory_usage.png](results/final/memory_usage.png)
+![memory_usage.png](results/final/memory_usage.png)
 
 ### 🔹 DB Connections
 - Observes connection pool utilization.
 - MVC may open more concurrent connections; WebFlux (with R2DBC) is often more efficient.
-  ![db_connection.png](results/final/db_connection.png)
+![db_connection.png](results/final/db_connection.png)
 ---
 ## 🔚 Conclusion
-- ✅ **WebFlux strengths:** Handles high concurrency efficiently with fewer threads.
+- ✅ **WebFlux strengths:** Handles high concurrency efficiently with fewer threads.  
 - ⚙️ **MVC strengths:** Easier to implement, stable at moderate traffic levels.  

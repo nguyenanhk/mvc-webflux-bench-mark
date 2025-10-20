@@ -1,0 +1,21 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: mvc-service
+    url: http://bench-mvc:8080
+    routes:
+      - name: mvc-route
+        paths:
+          - /mvc
+        strip_path: true     # ✅ remove /mvc before proxying
+        preserve_host: false
+
+  - name: webflux-service
+    url: http://bench-webflux:8081
+    routes:
+      - name: webflux-route
+        paths:
+          - /webflux
+        strip_path: true     # ✅ remove /webflux before proxying
+        preserve_host: false

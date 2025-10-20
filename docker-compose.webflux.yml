@@ -1,0 +1,27 @@
+
+services:
+  webflux-app:
+    build:
+      context: ./webflux-app
+      dockerfile: Dockerfile
+    image: bench-webflux:latest
+    container_name: bench-webflux
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/bench
+      SPRING_R2DBC_USERNAME: postgres
+      SPRING_R2DBC_PASSWORD: postgres
+      SERVER_PORT: 8081
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+    networks:
+      - bench-net
+
+networks:
+  bench-net:
+    external: true

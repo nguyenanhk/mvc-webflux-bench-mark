@@ -1,0 +1,73 @@
+{
+  "title": "Spring MVC vs WebFlux Benchmark",
+  "description": "Compare load and system metrics (k6 + Actuator via Prometheus)",
+  "schemaVersion": 38,
+  "version": 1,
+  "style": "dark",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "title": "Requests Per Second (k6)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(k6_http_reqs{test=\"mvc\"}[30s])", "legendFormat": "MVC RPS" },
+        { "expr": "rate(k6_http_reqs{test=\"webflux\"}[30s])", "legendFormat": "WebFlux RPS" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "title": "Latency (p95 / p99 ms)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "1000 * histogram_quantile(0.95, sum(rate(k6_http_req_duration_seconds_bucket{test=\"mvc\"}[1m])) by (le))", "legendFormat": "MVC p95" },
+        { "expr": "1000 * histogram_quantile(0.99, sum(rate(k6_http_req_duration_seconds_bucket{test=\"mvc\"}[1m])) by (le))", "legendFormat": "MVC p99" },
+        { "expr": "1000 * histogram_quantile(0.95, sum(rate(k6_http_req_duration_seconds_bucket{test=\"webflux\"}[1m])) by (le))", "legendFormat": "WebFlux p95" },
+        { "expr": "1000 * histogram_quantile(0.99, sum(rate(k6_http_req_duration_seconds_bucket{test=\"webflux\"}[1m])) by (le))", "legendFormat": "WebFlux p99" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "title": "Live Threads",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "jvm_threads_live_threads{job=\"bench-mvc\"}", "legendFormat": "MVC Threads" },
+        { "expr": "jvm_threads_live_threads{job=\"bench-webflux\"}", "legendFormat": "WebFlux Threads" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "title": "Memory Usage (MB)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "process_resident_memory_bytes{job=\"bench-mvc\"} / 1024 / 1024", "legendFormat": "MVC" },
+        { "expr": "process_resident_memory_bytes{job=\"bench-webflux\"} / 1024 / 1024", "legendFormat": "WebFlux" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "megabytes" } }
+    },
+    {
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "title": "CPU Usage (%)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "process_cpu_usage{job=\"bench-mvc\"} * 100", "legendFormat": "MVC" },
+        { "expr": "process_cpu_usage{job=\"bench-webflux\"} * 100", "legendFormat": "WebFlux" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+    {
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "title": "Database Connections (Active)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "hikaricp_connections_active{job=\"bench-mvc\"}", "legendFormat": "MVC Active" },
+        { "expr": "r2dbc_pool_acquired_connections{job=\"bench-webflux\"}", "legendFormat": "WebFlux Active" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    }
+  ]
+}

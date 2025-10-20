@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'bench-mvc'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['bench-mvc:8080']
+
+  - job_name: 'bench-webflux'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['bench-webflux:8081']
+
+  - job_name: 'pushgateway'
+    static_configs:
+      - targets: ['pushgateway:9091']
