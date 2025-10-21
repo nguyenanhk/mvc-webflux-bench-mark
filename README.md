@@ -1,20 +1,21 @@
-# 🧪 Spring MVC vs Spring WebFlux Benchmark Report
+# 🧪 Spring MVC vs Spring MVC Java 21 vs Spring WebFlux Benchmark Report
 
 ## 1️⃣ Overview
 
 **Purpose:**  
-This experiment evaluates and compares the performance of **Spring MVC (Tomcat)** and **Spring WebFlux (Netty)** applications under varying concurrent loads.  
+This experiment evaluates and compares the performance of **Spring MVC (Tomcat)** and **Spring MVC Java 21 (Tomcat)**  and **Spring WebFlux (Netty)** applications under varying concurrent loads.  
 The test focuses on throughput, latency, and system behavior when directly exposed (without API Gateway).
 
 ---
 
 ## 2️⃣ Application Logic
 
-| Component | Description |
-|------------|-------------|
-| **Spring MVC App** | A blocking REST API built with Spring Boot + Tomcat. Exposes `/api/users/{id}` endpoint fetching user data from PostgreSQL using Spring Data JPA. |
+| Component              | Description                                                                                                                                             |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Spring MVC App**     | A blocking REST API built with Spring Boot + Tomcat. Exposes `/api/users/{id}` endpoint fetching user data from PostgreSQL using Spring Data JPA.       |
+| **Spring MVC Java 21** | Same as above but leverage Java 21 Virtual Thread.                                                                                                      |
 | **Spring WebFlux App** | A reactive REST API built with Spring Boot WebFlux + Netty. Uses R2DBC for non-blocking PostgreSQL access. Exposes the same `/api/users/{id}` endpoint. |
-| **Database** | PostgreSQL 15 with seeded test data (~10k user rows). Both applications connect to the same database for consistency. |
+| **Database**           | PostgreSQL 15 with seeded test data (~10k user rows). Both applications connect to the same database for consistency.                                   |
 
 ---
 
@@ -52,12 +53,13 @@ The test focuses on throughput, latency, and system behavior when directly expos
 
 ## 4️⃣ Docker Setup
 
-| Container | Description | Resources |
-|------------|--------------|------------|
-| **PostgreSQL** | Holds user data | `CPU: 3 cores`, `Memory: 4GB` |
-| **Spring MVC App** | Blocking Tomcat app | `CPU: 2 cores`, `Memory: 2GB` |
-| **Spring WebFlux App** | Reactive Netty app | `CPU: 2 cores`, `Memory: 2GB` |
-| **Prometheus + Grafana** | Metrics collection & visualization | `CPU: 1 core`, `Memory: 1GB` |
+| Container                  | Description | Resources |
+|----------------------------|--------------|------------|
+| **PostgreSQL**             | Holds user data | `CPU: 3 cores`, `Memory: 4GB` |
+| **Spring MVC App**         | Blocking Tomcat app | `CPU: 2 cores`, `Memory: 2GB` |
+| **Spring MVC App Java 21** | Blocking Tomcat app | `CPU: 2 cores`, `Memory: 2GB` |
+| **Spring WebFlux App**     | Reactive Netty app | `CPU: 2 cores`, `Memory: 2GB` |
+| **Prometheus + Grafana**   | Metrics collection & visualization | `CPU: 1 core`, `Memory: 1GB` |
 
 **Network:**  
 All services run in the same Docker network (`bench-net`) for consistent latency and isolation.
@@ -91,54 +93,76 @@ All services run in the same Docker network (`bench-net`) for consistent latency
 ---
 
 ## 7️⃣ Results Summary
-| VUs | Framework | RPS | p90 (ms) | p95 (ms) |
-|------|------------|------|-----------|-----------|
-| 50 | Spring MVC | 482.04 | 6.51 | 7.59 |
-| 50 | Spring WebFlux | 484.20 | 6.78 | 8.87 |
-| 200 | Spring MVC | 1980.81 | 6.25 | 8.14 |
-| 200 | Spring WebFlux | 1978.87 | 5.31 | 7.08 |
-| 500 | Spring MVC | 4589.25 | 12.07 | 81.84 |
-| 500 | Spring WebFlux | 5004.83 | 2.85 | 4.04 |
-| 1000 | Spring MVC | 4823.89 | 200.08 | 276.48 |
-| 1000 | Spring WebFlux | 5305.85 | 183.10 | 197.77 |
+| VUs | Framework            | RPS     | p90 (ms) | p95 (ms) |
+|----:|:---------------------|--------:|----------:|----------:|
+| 50  | Spring MVC (Java 17) | 469.82  | 7.38      | 9.94      |
+| 50  | Spring MVC (Java 21) | 461.82  | 16.73     | 22.29     |
+| 50  | Spring WebFlux       | 477.35  | 7.01      | 8.97      |
+| 200 | Spring MVC (Java 17) | 1931.46 | 5.53      | 7.66      |
+| 200 | Spring MVC (Java 21) | 1842.44 | 17.92     | 24.84     |
+| 200 | Spring WebFlux       | 1928.39 | 6.41      | 8.80      |
+| 500 | Spring MVC (Java 17) | 4483.09 | 16.99     | 83.64     |
+| 500 | Spring MVC (Java 21) | 4419.11 | 22.06     | 28.73     |
+| 500 | Spring WebFlux       | 4731.68 | 5.63      | 14.66     |
+|1000 | Spring MVC (Java 17) | 3788.19 | 297.46    | 315.55    |
+|1000 | Spring MVC (Java 21) | 4128.52 | 233.21    | 281.52    |
+|1000 | Spring WebFlux       | 4802.36 | 204.15    | 287.49    |
+
 ---
-![rps_comparison_final.png](results/final/rps_comparison_final.png)
+![rps_line_chart.png](results/FINAL2/rps_line_chart.png)
 **Throughput (RPS):**
-- RPS increases steadily from 50 to 500 VUs for both frameworks.
-- WebFlux slightly surpasses MVC at all levels, reaching 5305 RPS vs 4823 RPS at 1000 VUs.
-- Both scale efficiently, but WebFlux shows better peak throughput under heavy load.
+- Spring WebFlux consistently delivers the highest throughput at all concurrency levels.
+- Spring MVC (Java 21) improves over MVC (Java 17) at higher load, showing ~ 9 % better RPS at 1000 VUs.
+- The gap between MVC 21 and WebFlux widens as concurrency increases, suggesting the reactive model still scales best under heavy load.
 
-![p90_comparison_final.png](results/final/p90_comparison_final.png)
-![p95_comparison_final.png](results/final/p95_comparison_final.png)
-**Latency (p90 / p95):**
-- Up to 200 VUs, latency remains below 10 ms for both frameworks.
-- At 500 VUs, MVC’s p95 latency spikes to 81.8 ms, while WebFlux stays under 5 ms.
-- At 1000 VUs, both degrade, but WebFlux maintains lower latency (~197 ms) compared to MVC (~276 ms).
+![p90_line_chart.png](results/FINAL2/p90_line_chart.png)
+**Latency (p90):**
+- At low concurrency (50–200 VUs), all three frameworks exhibit similar P90 latency (< 20 ms).
+- At 500 VUs + :
+    -  WebFlux holds remarkably low P90 latency (≈ 5–6 ms).
+    - MVC 17/21 both rise sharply; MVC 21 improves slightly over MVC 17 but remains > 3× slower at 500 VUs.
+- At 1000 VUs → MVC 17 ≈ 297 ms, MVC 21 ≈ 233 ms, WebFlux ≈ 204 ms.
+  → Virtual threads mitigate some blocking overhead but still trail the non-blocking model.
 
+![p95_line_chart.png](results/FINAL2/p95_line_chart.png)
+**Latency (p95):**
+- Trends mirror P90 but the contrast becomes stronger:
+    - WebFlux maintains P95 below 300 ms even at 1000 VUs.
+    - MVC 21 reduces tail latency vs MVC 17 (281 ms vs 316 ms), showing that Java 21 virtual threads help smooth spikes.
+- MVC 17’s P95 jumps to ~ 316 ms earlier, implying thread-pool saturation under blocking I/O.
 ## 8️⃣ Resource Metrics Over Time
 
 These metrics are collected via **Spring Actuator → Prometheus → Grafana** and visualized during load tests.
-
+Images display Mvc (Java 17), Mvc (Java 21), and WebFlux from top to bottom on each section
 ### 🔹 JVM Threads
 - Observes how many threads each framework spawns under different concurrency levels.
 - High thread count in Spring MVC may indicate thread saturation; WebFlux typically remains constant.
-  ![jvm_thread.png](results/final/jvm_thread.png)
+  ![mvc_jvm.png](results/FINAL2/mvc_jvm.png)
+  ![mvcj2_jvm.png](results/FINAL2/mvcj2_jvm.png)
+  ![flux_jvm.png](results/FINAL2/flux_jvm.png)
 
 ### 🔹 CPU Usage (%)
 - Measures average CPU utilization during each load level.
 - High values (80–100%) indicate CPU-bound workloads (serialization, mapping, etc.).
-  ![cpu_usage.png](results/final/cpu_usage.png)
+  ![mvc_cpu.png](results/FINAL2/mvc_cpu.png)
+  ![mvcj21_cpu.png](results/FINAL2/mvcj21_cpu.png)
+  ![flux_cpu.png](results/FINAL2/flux_cpu.png)
 
 ### 🔹 Memory Usage (MB)
 - Shows heap consumption and GC behavior during tests.
 - Useful for detecting leaks or excessive object creation.
-  ![memory_usage.png](results/final/memory_usage.png)
+  ![mvc_mem.png](results/FINAL2/mvc_mem.png)
+  ![mvcj2_mem.png](results/FINAL2/mvcj2_mem.png)
+  ![flux_mem.png](results/FINAL2/flux_mem.png)
 
 ### 🔹 DB Connections
 - Observes connection pool utilization.
 - MVC may open more concurrent connections; WebFlux (with R2DBC) is often more efficient.
-  ![db_connection.png](results/final/db_connection.png)
+  ![mvc_db.png](results/FINAL2/mvc_db.png)
+  ![mvcj2_db.png](results/FINAL2/mvcj2_db.png)
+  ![flux_connection.png](results/FINAL2/flux_connection.png)
 ---
 ## 🔚 Conclusion
 - ✅ **WebFlux strengths:** Handles high concurrency efficiently with fewer threads.
-- ⚙️ **MVC strengths:** Easier to implement, stable at moderate traffic levels.  
+- ⚙️ **MVC strengths:** Easier to implement, stable at moderate traffic levels.
+- ⚙️ **MVC Java 21 strengths:** Better performance than Java 17 version, near WebFlux at all loads.
