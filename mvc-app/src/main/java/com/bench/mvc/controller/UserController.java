@@ -1,7 +1,11 @@
 package com.bench.mvc.controller;
 
+import com.bench.mvc.entity.UserEntity;
 import com.bench.shared.UserDTO;
 import com.bench.mvc.repo.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +26,15 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserDTO> list(@RequestParam(defaultValue = "50") int limit) {
-        return repo.findAll().stream().limit(limit).map(e -> new UserDTO(e.getId(), e.getEmail(), e.getFullName(), e.getCreatedAt())).toList();
+    public List<UserDTO> list(@RequestParam Integer page, @RequestParam Integer pageSize) {
+        if (page < 0) page = 0;
+        if (pageSize <= 0) pageSize = 20;
+        if (pageSize > 1000) pageSize = 1000; // prevent abuse
+
+        PageRequest pageable = PageRequest.of(page, pageSize);
+        Page<UserEntity> pageableResponses = repo.findAll(pageable);
+
+        List<UserEntity> content = pageableResponses.getContent();
+        return content.stream().map(e -> new UserDTO(e.getId(), e.getEmail(), e.getFullName(), e.getCreatedAt())).toList();
     }
 }

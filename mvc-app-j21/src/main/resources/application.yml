@@ -1,0 +1,23 @@
+server:
+  port: 8082
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bench
+    username: postgres
+    password: postgres
+    hikari:
+      maximum-pool-size: 200
+  jpa:
+    hibernate:
+      ddl-auto: none
+  threads:
+    virtual:
+      enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true

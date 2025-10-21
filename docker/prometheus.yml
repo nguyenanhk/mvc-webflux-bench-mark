@@ -12,6 +12,7 @@ scrape_configs:
     static_configs:
       - targets: ['bench-webflux:8081']
 
-  - job_name: 'pushgateway'
+  - job_name: 'bench-mvc-j21'
+    metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['pushgateway:9091']
+      - targets: ['bench-mvc-j21:8082']
